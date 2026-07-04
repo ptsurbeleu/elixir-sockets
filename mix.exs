@@ -8,7 +8,7 @@ defmodule Socket.MixProject do
       version: "2.1.2",
       deps: deps(),
       package: package(),
-      description: "Socket handling library for Elixir, updated for OTP20+ by the witchtails team"
+      description: "Socket handling library for Elixir, updated for OTP20+"
     ]
   end
 
@@ -27,10 +27,10 @@ defmodule Socket.MixProject do
 
   defp package do
     [
-      name: :socket2,
-      maintainers: ["dominicletz"],
-      licenses: ["WTFPL"],
-      links: %{"GitHub" => "https://github.com/witchtails/elixir-socket2"}
+      name: :sockets,
+      maintainers: ["ptsurbeleu"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/ptsurbeleu/elixir-sockets"}
     ]
   end
 end

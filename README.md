@@ -1,9 +1,9 @@
-Elixir sockets made decent ![Build](https://github.com/dominicletz/elixir-socket2/actions/workflows/test.yml/badge.svg)
+Elixir sockets made decent ![Build](https://github.com/ptsurbeleu/elixir-sockets/actions/workflows/test.yml/badge.svg)
 ==========================
 This library wraps `gen_tcp`, `gen_udp` and `gen_sctp`, `ssl` and implements
 websockets and socks.
 
-Sockets2 is a fork from the zombie project at: https://github.com/meh/elixir-socket updated for OTP20+ and with PRs from other forks merged. 
+Sockets is a fork from [elixir-socket](https://github.com/meh/elixir-socket) and [elixir-socket2](https://github.com/witchtails/elixir-socket2).
 
 
 Installation
@@ -14,7 +14,7 @@ In your `mix.exs` file
 defp deps do
   [
     # ...
-    {:socket2, "~> 1.0"},
+    {:sockets, "~> 1.0"},
     # ...
   ]
 end
