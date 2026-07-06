@@ -114,11 +114,11 @@ defmodule Socket.SSL do
   end
 
   def connect(wrap, options) when options |> is_list do
-    wrap =
-      if wrap |> is_port do
-        wrap.to_port
-      else
-        wrap
+    # Extract raw Erlang port from either a Socket.Port struct or a bare port
+    socket =
+      case wrap do
+        %Socket.Port{port: raw} -> raw
+        raw when is_port(raw) -> raw
       end
 
     timeout = options[:timeout] || :infinity
@@ -129,7 +129,7 @@ defmodule Socket.SSL do
       |> Keyword.put_new_lazy(:cacerts, fn -> :public_key.cacerts_get() end)
       |> Keyword.put_new(:verify, true)
 
-    :ssl.connect(wrap, options, timeout)
+    :ssl.connect(socket, options, timeout)
   end
 
   def connect(address, port) when port |> is_integer do
