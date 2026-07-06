@@ -19,7 +19,6 @@ defmodule Socket.MixProject do
 
   defp deps do
     [
-      {:certifi, "~> 2.12"},
       {:ex_doc, "~> 0.30", only: [:dev]},
       {:credo, "~> 1.7", only: [:dev]}
     ]

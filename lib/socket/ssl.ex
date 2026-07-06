@@ -126,7 +126,7 @@ defmodule Socket.SSL do
     options =
       options
       |> Keyword.delete(:timeout)
-      |> Keyword.put_new_lazy(:cacerts, fn -> :certifi.cacerts() end)
+      |> Keyword.put_new_lazy(:cacerts, fn -> :public_key.cacerts_get() end)
       |> Keyword.put_new(:verify, true)
 
     :ssl.connect(wrap, options, timeout)
