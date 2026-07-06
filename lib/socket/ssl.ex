@@ -384,7 +384,10 @@ defmodule Socket.SSL do
           [{:server_name_indication, :disable}]
 
         {:server_name, name} ->
-          [{:server_name_indication, String.to_charlist(name)}]
+          [
+            { :server_name_indication, String.to_charlist(name) },
+            { :customize_hostname_check, [{:match_fun, :public_key.pkix_verify_hostname_match_fun(:https)}] }
+          ]
 
         {:cert, [path: path]} ->
           [{:certfile, path}]
