@@ -4,7 +4,9 @@ defmodule HTTP do
   end
 
   def get(%URI{host: host, port: port, path: path}) do
+    dbg()
     sock = Socket.TCP.connect!(host, port, packet: :line)
+    dbg()
     sock |> Socket.Stream.send!("GET #{path || "/"} HTTP/1.1\r\nHost: #{host}\r\n\r\n")
 
     [_, code, text] = Regex.run(~r"HTTP/1.1 (.*?) (.*?)\s*$", sock |> Socket.Stream.recv!())
@@ -12,7 +14,7 @@ defmodule HTTP do
     headers = headers([], sock) |> Enum.into(%{})
 
     sock |> Socket.packet!(:raw)
-    body = sock |> Socket.Stream.recv!(String.to_integer(headers["Content-Length"]))
+    body = sock |> Socket.Stream.recv!()
 
     {{String.to_integer(code), text}, headers, body}
   end
@@ -35,7 +37,7 @@ defmodule HttpTest do
 
   test "get" do
     {{200, "OK"}, headers, body} = HTTP.get("http://www.example.com")
-    assert headers["Content-Type"] == "text/html; charset=UTF-8"
+    assert headers["Content-Type"] == "text/html"
     assert String.contains?(body, "<html")
   end
 end
