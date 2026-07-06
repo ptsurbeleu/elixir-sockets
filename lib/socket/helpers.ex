@@ -8,7 +8,7 @@ defmodule Socket.Helpers do
   defmacro defbang({name, _, args}) do
     args = if is_list(args), do: args, else: []
 
-    quote bind_quoted: [name: Macro.escape(name), args: Macro.escape(args)] do
+    quote generated: true, bind_quoted: [name: Macro.escape(name), args: Macro.escape(args)] do
       def unquote((to_string(name) <> "!") |> String.to_atom())(unquote_splicing(args)) do
         case unquote(name)(unquote_splicing(args)) do
           :ok ->
@@ -27,7 +27,7 @@ defmodule Socket.Helpers do
   defmacro defbang({name, _, args}, to: mod) do
     args = if is_list(args), do: args, else: []
 
-    quote bind_quoted: [
+    quote generated: true, bind_quoted: [
             mod: Macro.escape(mod),
             name: Macro.escape(name),
             args: Macro.escape(args)

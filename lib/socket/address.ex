@@ -7,7 +7,6 @@
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
 defmodule Socket.Address do
-  require Bitwise
 
   @type t :: String.t() | charlist | :inet.ip_address()
 

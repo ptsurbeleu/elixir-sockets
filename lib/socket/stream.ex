@@ -16,9 +16,8 @@ defprotocol Socket.Stream.Protocol do
   @doc """
   Send a file through the socket, using non-copying operations where available.
   """
-  @spec file(t, String.t()) :: :ok | {:error, term}
   @spec file(t, String.t(), Keyword.t()) :: :ok | {:error, term}
-  def file(self, path, options \\ [])
+  def file(self, path, options)
 
   @doc """
   Receive data from the socket compatible with the packet type.
@@ -42,7 +41,7 @@ defprotocol Socket.Stream.Protocol do
   Shutdown the socket in the given mode, either `:both`, `:read`, or `:write`.
   """
   @spec shutdown(t, :both | :read | :write) :: :ok | {:error, term}
-  def shutdown(self, how \\ :both)
+  def shutdown(self, how )
 
   @doc """
   Close the socket.
@@ -60,8 +59,6 @@ defmodule Socket.Stream do
   defdelegate send(self, data), to: Socket.Stream.Protocol
   defbang(send(self, data), to: Socket.Stream.Protocol)
 
-  defdelegate file(self, path), to: Socket.Stream.Protocol
-  defbang(file(self, path), to: Socket.Stream.Protocol)
   defdelegate file(self, path, options), to: Socket.Stream.Protocol
   defbang(file(self, path, options), to: Socket.Stream.Protocol)
 
@@ -72,8 +69,6 @@ defmodule Socket.Stream do
   defdelegate recv(self, length, options), to: Socket.Stream.Protocol
   defbang(recv(self, length, options), to: Socket.Stream.Protocol)
 
-  defdelegate shutdown(self), to: Socket.Stream.Protocol
-  defbang(shutdown(self), to: Socket.Stream.Protocol)
   defdelegate shutdown(self, how), to: Socket.Stream.Protocol
   defbang(shutdown(self, how), to: Socket.Stream.Protocol)
 

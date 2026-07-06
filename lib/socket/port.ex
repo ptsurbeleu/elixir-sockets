@@ -29,10 +29,7 @@ defmodule Socket.Port do
       client |> Socket.Stream.close()
 
   """
-  require Logger
-
   use Socket.Helpers
-  require Record
 
   defstruct [:port, :owner]
   @opaque t :: %Socket.Port{port: port(), owner: pid()}

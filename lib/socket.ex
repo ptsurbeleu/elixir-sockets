@@ -241,9 +241,6 @@ defmodule Socket do
 
   defdelegate equal?(self, other), to: Socket.Protocol
 
-  defdelegate accept(self), to: Socket.Protocol
-  defbang(accept(self), to: Socket.Protocol)
-
   defdelegate accept(self, options), to: Socket.Protocol
   defbang(accept(self, options), to: Socket.Protocol)
 
@@ -285,9 +282,8 @@ defprotocol Socket.Protocol do
   @doc """
   Accept a connection from the socket.
   """
-  @spec accept(t) :: {:ok, t} | {:error, term}
   @spec accept(t, Keyword.t()) :: {:ok, t} | {:error, term}
-  def accept(self, options \\ [])
+  def accept(self, options)
 
   @doc """
   Set options for the socket.
