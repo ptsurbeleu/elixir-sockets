@@ -3,7 +3,7 @@ defmodule Socket.MixProject do
 
   def project do
     [
-      app: :socket2,
+      app: :sockets,
       elixir: "~> 1.12",
       version: "2.1.2",
       deps: deps(),
