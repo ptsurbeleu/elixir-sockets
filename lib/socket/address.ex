@@ -7,7 +7,6 @@
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
 defmodule Socket.Address do
-
   @type t :: String.t() | charlist | :inet.ip_address()
 
   @doc """
@@ -84,7 +83,7 @@ defmodule Socket.Address do
   @spec is_in_subnet?(t, t, Integer) :: boolean
   def is_in_subnet?(addr, net, netsize)
       when netsize |> is_integer and netsize >= 1 and netsize <= 128 do
-    is_ip_in_subnet(net, netsize, addr)
+    ip_in_subnet?(net, netsize, addr)
   end
 
   defp maskv4(addrpart, netsize) when addrpart |> is_integer and netsize |> is_integer do
@@ -138,7 +137,7 @@ defmodule Socket.Address do
   end
 
   # for IP V4
-  defp is_ip_in_subnet({net1, net2, net3, net4}, netsize, {addr1, addr2, addr3, addr4}) do
+  defp ip_in_subnet?({net1, net2, net3, net4}, netsize, {addr1, addr2, addr3, addr4}) do
     addr = {
       maskv4(addr1, netsize),
       maskv4(addr2, netsize - 8),
@@ -157,7 +156,7 @@ defmodule Socket.Address do
   end
 
   # for IP V6
-  defp is_ip_in_subnet(
+  defp ip_in_subnet?(
          {net1, net2, net3, net4, net5, net6, net7, net8},
          netsize,
          {addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8}

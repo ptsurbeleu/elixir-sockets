@@ -115,7 +115,7 @@ defmodule Socket.SSL do
 
   def connect(wrap, options) when options |> is_list do
     wrap =
-      unless wrap |> is_port do
+      if wrap |> is_port do
         wrap.to_port
       else
         wrap
@@ -385,8 +385,9 @@ defmodule Socket.SSL do
 
         {:server_name, name} ->
           [
-            { :server_name_indication, String.to_charlist(name) },
-            { :customize_hostname_check, [{:match_fun, :public_key.pkix_verify_hostname_match_fun(:https)}] }
+            {:server_name_indication, String.to_charlist(name)},
+            {:customize_hostname_check,
+             [{:match_fun, :public_key.pkix_verify_hostname_match_fun(:https)}]}
           ]
 
         {:cert, [path: path]} ->

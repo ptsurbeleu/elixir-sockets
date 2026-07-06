@@ -27,7 +27,8 @@ defmodule Socket.Helpers do
   defmacro defbang({name, _, args}, to: mod) do
     args = if is_list(args), do: args, else: []
 
-    quote generated: true, bind_quoted: [
+    quote generated: true,
+          bind_quoted: [
             mod: Macro.escape(mod),
             name: Macro.escape(name),
             args: Macro.escape(args)

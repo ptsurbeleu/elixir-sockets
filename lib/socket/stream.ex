@@ -41,7 +41,7 @@ defprotocol Socket.Stream.Protocol do
   Shutdown the socket in the given mode, either `:both`, `:read`, or `:write`.
   """
   @spec shutdown(t, :both | :read | :write) :: :ok | {:error, term}
-  def shutdown(self, how )
+  def shutdown(self, how)
 
   @doc """
   Close the socket.
