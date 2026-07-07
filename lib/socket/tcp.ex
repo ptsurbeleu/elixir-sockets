@@ -61,7 +61,7 @@ defmodule Socket.TCP do
   @spec error(term) :: String.t()
   def error(code) do
     case :inet.format_error(code) do
-      ~c"unknown POSIX error" ->
+      ~c"unknown POSIX error:" ++ _ ->
         nil
 
       message ->

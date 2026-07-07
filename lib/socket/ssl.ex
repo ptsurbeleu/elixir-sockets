@@ -69,6 +69,10 @@ defmodule Socket.SSL do
   @doc """
   Return a proper error string for the given code or nil if it can't be
   converted.
+
+  NOTE: :ssl.format_error/1 delegates to :inet.format_error/1 internally,
+  so POSIX error codes are decoded successfully. Callers must not assume a
+  POSIX error code will produce ~c"Unexpected error: <code>".
   """
   @spec error(term) :: String.t()
   def error(code) do
@@ -386,8 +390,7 @@ defmodule Socket.SSL do
         {:server_name, name} ->
           [
             {:server_name_indication, String.to_charlist(name)},
-            {:customize_hostname_check,
-             [{:match_fun, :public_key.pkix_verify_hostname_match_fun(:https)}]}
+            wildcard_fix()
           ]
 
         {:cert, [path: path]} ->

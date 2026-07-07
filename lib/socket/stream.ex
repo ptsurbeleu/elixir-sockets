@@ -51,6 +51,13 @@ defprotocol Socket.Stream.Protocol do
 end
 
 defmodule Socket.Stream do
+  @moduledoc """
+  Unified interface for stream-based sockets (TCP, SSL, Port).
+
+  Delegates to `Socket.Stream.Protocol` and provides bang (`!`) variants of all
+  operations, plus `io/2,3` for streaming data from an IO device directly into a
+  socket.
+  """
   @type t :: Socket.Stream.Protocol.t()
 
   use Socket.Helpers

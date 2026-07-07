@@ -17,24 +17,26 @@ defmodule Socket do
     @type t :: %__MODULE__{message: String.t() | nil}
 
     def exception(reason: reason) do
-      message = case reason do
-        r when is_atom(r) ->
-          cond do
-            msg = Socket.TCP.error(reason) ->
-              msg
+      message =
+        case reason do
+          r when is_atom(r) ->
+            cond do
+              msg = Socket.TCP.error(reason) ->
+                msg
 
-            msg = Socket.SSL.error(reason) ->
-              msg
+              msg = Socket.SSL.error(reason) ->
+                msg
 
-            true ->
-              reason |> to_string
-          end
+              true ->
+                reason |> to_string
+            end
 
-        { :tls_alert, { errcode, ssl_message }} ->
-          List.to_string(ssl_message)
+          {:tls_alert, {_errcode, ssl_message}} ->
+            List.to_string(ssl_message)
 
-        _ -> inspect(reason)
-      end
+          _ ->
+            inspect(reason)
+        end
 
       %Error{message: message}
     end
@@ -67,7 +69,11 @@ defmodule Socket do
     Socket.TCP.connect(host, port)
   end
 
-  def connect(%URI{scheme: "ssl", host: host, port: port}) do
+  def connect(%URI{scheme: "ssl", host: host, port: port}) when is_nil(port) do
+    Socket.SSL.connect(host, 443)
+  end
+
+  def connect(%URI{scheme: "ssl", host: host, port: port}) when is_integer(port) do
     Socket.SSL.connect(host, port)
   end
 
@@ -92,7 +98,11 @@ defmodule Socket do
     Socket.TCP.connect!(host, port)
   end
 
-  def connect!(%URI{scheme: "ssl", host: host, port: port}) do
+  def connect!(%URI{scheme: "ssl", host: host, port: port}) when is_nil(port) do
+    Socket.SSL.connect!(host, 443)
+  end
+
+  def connect!(%URI{scheme: "ssl", host: host, port: port}) when is_integer(port) do
     Socket.SSL.connect!(host, port)
   end
 
