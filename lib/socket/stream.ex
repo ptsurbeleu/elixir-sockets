@@ -313,30 +313,38 @@ defimpl Socket.Stream.Protocol, for: Socket.Port do
   end
 
   def recv(%Socket.Port{port: port}, _length, options) do
-    timeout = options[:timeout] || :infinity
+    # Figure out an actual timeout and do a short circuit
+    # when the port has already exited
+    {timeout, reply_state} =
+      if Port.info(port) == nil,
+        do: {0, :closed},
+        else: {options[:timeout] || :infinity, :timeout}
 
-    if Port.info(port) == nil do
-      {:error, nil}
-    else
-      receive do
-        {^port, {:data, {:noeol, value}}} ->
-          {:ok, value}
+    # NOTE: Always check mailbox for incoming messages that have been received
+    # after the process has exited (eq. a race condition of shortlived port)
+    receive do
+      # Partial line message, eq. specified size limit reached before newline
+      {^port, {:data, {:noeol, value}}} ->
+        {:ok, value}
 
-        {^port, {:data, {:eol, value}}} ->
-          {:ok, value}
+      # Complete line (incl. EOL) match
+      {^port, {:data, {:eol, value}}} ->
+        {:ok, value}
 
-        {^port, {:data, value}} ->
-          {:ok, value}
+      # Raw stream data, no line framing (eq. line or fragment-based)
+      {^port, {:data, value}} ->
+        {:ok, value}
 
-        {^port, {:exit_status, status}} ->
-          {:error, {:exit_status, status}}
+      # Port process exited; status is the OS exit code
+      {^port, {:exit_status, status}} ->
+        {:error, {:exit_status, status}}
 
-        {:EXIT, ^port, reason} ->
-          {:error, reason}
-      after
-        timeout ->
-          {:error, :timeout}
-      end
+      # Port was killed or crashed abnormally
+      {:EXIT, ^port, reason} ->
+        {:error, reason}
+    after
+      timeout ->
+        {:error, reply_state}
     end
   end
 
