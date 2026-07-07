@@ -1,0 +1,49 @@
+<!-- livebook:{"autosave_interval_s":null} -->
+
+# Sockets
+
+```elixir
+Mix.install([
+  {:sockets, "~> 2.1"}
+])
+```
+
+## Getting started
+
+`sockets` is a wrapper library over built-in Erlang's modules `gen_tcp`, `gen_udp`, `gen_sctp`, `ssl` and on top of that it also implements support for `RFC 6455 WebSockets` and `SOCKS`. Its API allows you to easily build both clients and servers handling data exchange over the socket.
+
+The easiest and most convenient way to start using the library is to use methods available in `Socket` module.
+
+Here is a quick and simple example how to establish an **SSL** connection with the web server at `example.com`:
+
+```elixir
+{:ok, client} = Socket.connect("ssl://example.com")
+client |> Socket.Stream.send("GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+client |> Socket.Stream.recv!()
+```
+
+**NOTE:** the URI used in this example starts with `ssl://...` instead of more familiar `https://...` scheme.
+
+The reason for this is to delibrately make a distinction that the library operates on the transport layer rather than overloading `http://` or `https://` with transport-level meaning.
+
+The library uses explicit URI schemes that map directly to the underlying protocol. `tcp://` and `udp://` correspond to `gen_tcp` and `gen_udp`, `ssl://` corresponds to `:ssl` making TLS explicit up front, and `ws://` or `wss://` follow the conventions established by **RFC 6455 WebSockets**.
+
+This makes intent clear at the call site — the scheme tells you not just where to connect, but exactly which protocol is being used.
+
+<!-- livebook:{"break_markdown":true} -->
+
+Here is an example how to connect to a non-secure websocket endpoint at `ws://echo.websocket.in`:
+
+```elixir
+socket = Socket.connect!("ws://echo.websocket.in")
+socket |> Socket.Web.send!({:text, "text"})
+socket |> Socket.Web.recv!()
+```
+
+And this is an example how to connect to a secure websocket endpoint at `wss://echo.websocket.in`:
+
+```elixir
+socket = Socket.connect!("wss://echo.websocket.in")
+socket |> Socket.Web.send!({ :text, "test" })
+socket |> Socket.Web.recv!()
+```
