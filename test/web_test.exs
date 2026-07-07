@@ -1,4 +1,4 @@
-defmodule SocketTest do
+defmodule WebSocketTest do
   use ExUnit.Case
 
   test "connect" do
@@ -8,12 +8,6 @@ defmodule SocketTest do
     socket |> Socket.Web.send!({:text, "test"})
     assert socket |> Socket.Web.recv!() == {:text, "test"}
   end
-
-  # test "connect tls" do
-  #   socket = Socket.Web.connect!("echo.websocket.org", secure: true)
-  #   socket |> Socket.Web.send!({:text, "test"})
-  #   assert socket |> Socket.Web.recv!() == {:text, "test"}
-  # end
 
   test "connect path" do
     Task.start_link(fn -> server(12_346) end)
