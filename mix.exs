@@ -21,6 +21,7 @@ defmodule Socket.MixProject do
     [
       {:ex_doc, "~> 0.30", only: [:dev]},
       {:credo, "~> 1.7", only: [:dev]},
+      {:dialyxir, github: "jeremyjh/dialyxir", only: [:dev, :test], runtime: false},
       {:version_tasks, "~> 0.12.0", only: [:dev]}
     ]
   end
