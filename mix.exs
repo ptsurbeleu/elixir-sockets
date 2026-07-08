@@ -20,7 +20,8 @@ defmodule Socket.MixProject do
   defp deps do
     [
       {:ex_doc, "~> 0.30", only: [:dev]},
-      {:credo, "~> 1.7", only: [:dev]}
+      {:credo, "~> 1.7", only: [:dev]},
+      {:version_tasks, "~> 0.12.0", only: [:dev]}
     ]
   end
 
