@@ -8,11 +8,12 @@
 
 defmodule Socket.Address do
   @type t :: String.t() | charlist | :inet.ip_address()
+  @type ipaddr :: :inet.ip_address()
 
   @doc """
   Parse a string to an ip address tuple.
   """
-  @spec parse(t) :: :inet.ip_address()
+  @spec parse(t) :: ipaddr | nil
   def parse(text) when text |> is_binary do
     parse(String.to_charlist(text))
   end
@@ -80,7 +81,7 @@ defmodule Socket.Address do
   @doc """
   Check if an IP address belong to a network
   """
-  @spec is_in_subnet?(t, t, Integer) :: boolean
+  @spec is_in_subnet?(ipaddr, ipaddr, 1..128) :: boolean
   def is_in_subnet?(addr, net, netsize)
       when netsize |> is_integer and netsize >= 1 and netsize <= 128 do
     ip_in_subnet?(net, netsize, addr)
