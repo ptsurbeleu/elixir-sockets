@@ -139,6 +139,7 @@ defmodule Socket.SOCKS do
     end
   end
 
+  @dialyzer {:no_match, response: 2}
   defp response(_socket, 5) do
     {:error, :hue}
   end
