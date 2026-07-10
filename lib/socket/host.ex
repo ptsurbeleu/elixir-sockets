@@ -118,7 +118,7 @@ defmodule Socket.Host do
   def name do
     case :inet.gethostname() do
       {:ok, name} ->
-        :unicode.characters_to_list(name)
+        to_string(name)
     end
   end
 
