@@ -422,6 +422,8 @@ end
 defimpl Socket.Protocol, for: Tuple do
   require Record
 
+  @type sslsocket :: :ssl.sslsocket()
+
   def equal?(self, other)
       when self |> Record.is_record(:sslsocket) and other |> Record.is_record(:sslsocket) do
     self == other
@@ -439,6 +441,7 @@ defimpl Socket.Protocol, for: Tuple do
     Socket.SSL.accept(self, options)
   end
 
+  @spec options(sslsocket, Keyword.t()) :: :ok
   def options(self, opts) when self |> Record.is_record(:sslsocket) do
     Socket.SSL.options(self, opts)
   end
