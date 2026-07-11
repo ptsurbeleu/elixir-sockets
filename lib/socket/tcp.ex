@@ -252,7 +252,8 @@ defmodule Socket.TCP do
         raise RuntimeError, message: "the current process isn't the owner"
 
       {:error, :badarg} ->
-        raise RuntimeError, message: "not an identifier of an open port, or the registered name of an open port"
+        raise RuntimeError,
+          message: "not an identifier of an open port, or the registered name of an open port"
 
       {:error, code} ->
         raise Socket.Error, reason: code

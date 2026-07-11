@@ -112,7 +112,8 @@ defmodule Socket.UDP do
         raise RuntimeError, message: "the current process isn't the owner"
 
       {:error, :badarg} ->
-        raise RuntimeError, message: "not an identifier of an open port, or the registered name of an open port"
+        raise RuntimeError,
+          message: "not an identifier of an open port, or the registered name of an open port"
 
       {:error, reason} ->
         raise Socket.Error, reason: reason
