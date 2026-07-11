@@ -47,13 +47,14 @@ defmodule Socket.SSL do
   use Socket.Helpers
   require Record
 
-  @opaque t :: port
+  @type t :: Socket.SSL.t()
   @type error :: nil | String.t()
+  @type sslsocket :: :ssl.sslsocket()
 
   @doc """
   Get the list of supported ciphers.
   """
-  @spec ciphers :: [:ssl.erl_cipher_suite()]
+  @spec ciphers(:ssl.protocol_version()) :: :ssl.ciphers()
   def ciphers(version \\ :"tlsv1.3") do
     :ssl.cipher_suites(:all, version)
   end
@@ -74,7 +75,7 @@ defmodule Socket.SSL do
   so POSIX error codes are decoded successfully. Callers must not assume a
   POSIX error code will produce ~c"Unexpected error: <code>".
   """
-  @spec error(term) :: String.t()
+  @spec error(term) :: String.t() | nil
   def error(code) do
     case :ssl.format_error(code) do
       ~c"Unexpected error:" ++ _ ->
@@ -88,11 +89,14 @@ defmodule Socket.SSL do
   @doc """
   Connect to the given address and port tuple or SSL connect the given socket.
   """
-  @spec connect(Socket.t() | {Socket.t(), :inet.port_number()}) :: {:ok, t} | {:error, term}
+  @spec connect({Socket.Address.t(), :inet.port_number()}) ::
+          {:ok, sslsocket} | {:ok, sslsocket, :ssl.protocol_extensions()} | {:error, term}
   def connect({address, port}) do
     connect(address, port)
   end
 
+  @spec connect(Socket.t()) ::
+          {:ok, sslsocket} | {:ok, sslsocket, :ssl.protocol_extensions()} | {:error, term}
   def connect(socket) do
     connect(socket, [])
   end
@@ -101,22 +105,49 @@ defmodule Socket.SSL do
   Connect to the given address and port tuple or SSL connect the given socket,
   raising if an error occurs.
   """
-  @spec connect!(Socket.t() | {Socket.t(), :inet.port_number()}) :: t | no_return
-  defbang(connect(socket_or_descriptor))
+  @spec connect!(Socket.Address.t(), :inet.port_number()) ::
+          sslsocket | {sslsocket, :ssl.protocol_extensions()}
+  def connect!(address, port) when is_integer(port) do
+    case connect(address, port) do
+      {:ok, socket} ->
+        socket
+
+      {:ok, socket, extensions} ->
+        {socket, extensions}
+
+      {:error, reason} ->
+        raise Socket.Error, reason: reason
+    end
+  end
+
+  @spec connect!({Socket.Address.t(), :inet.port_number()}, Keyword.t()) ::
+          sslsocket | {sslsocket, :ssl.protocol_extensions()}
+  def connect!({address, port}, options) when options |> is_list do
+    case connect(address, port, options) do
+      {:ok, socket} ->
+        socket
+
+      {:ok, socket, extensions} ->
+        {socket, extensions}
+
+      {:error, reason} ->
+        raise Socket.Error, reason: reason
+    end
+  end
 
   @doc """
   Connect to the given address and port tuple with the given options or SSL
   connect the given socket with the given options or connect to the given
   address and port.
   """
-  @spec connect(
-          {Socket.Address.t(), :inet.port_number()} | Socket.t() | Socket.Address.t(),
-          Keyword.t() | :inet.port_number()
-        ) :: {:ok, t} | {:error, term}
+  @spec connect({Socket.Address.t(), :inet.port_number()}, Keyword.t()) ::
+          {:ok, sslsocket} | {:ok, sslsocket, :ssl.protocol_extensions()} | {:error, term}
   def connect({address, port}, options) when options |> is_list do
     connect(address, port, options)
   end
 
+  @spec connect(Socket.Port.t() | port, Keyword.t()) ::
+          {:ok, sslsocket} | {:ok, sslsocket, :ssl.protocol_extensions()} | {:error, term}
   def connect(wrap, options) when options |> is_list do
     # Extract raw Erlang port from either a Socket.Port struct or a bare port
     socket =
@@ -136,25 +167,17 @@ defmodule Socket.SSL do
     :ssl.connect(socket, options, timeout)
   end
 
+  @spec connect(Socket.Address.t(), :inet.port_number()) ::
+          {:ok, sslsocket} | {:ok, sslsocket, :ssl.protocol_extensions()} | {:error, term}
   def connect(address, port) when port |> is_integer do
     connect(address, port, [])
   end
 
   @doc """
-  Connect to the given address and port tuple with the given options or SSL
-  connect the given socket with the given options or connect to the given
-  address and port, raising if an error occurs.
-  """
-  @spec connect!(
-          {Socket.Address.t(), :inet.port_number()} | Socket.t() | Socket.Address.t(),
-          Keyword.t() | :inet.port_number()
-        ) :: t | no_return
-  defbang(connect(descriptor, options))
-
-  @doc """
   Connect to the given address and port with the given options.
   """
-  @spec connect(Socket.Address.t(), :inet.port_number(), Keyword.t()) :: {:ok, t} | {:error, term}
+  @spec connect(Socket.Address.t(), :inet.port_number(), Keyword.t()) ::
+          {:ok, sslsocket} | {:ok, sslsocket, :ssl.protocol_extensions()} | {:error, term}
   def connect(address, port, options) do
     address =
       if address |> is_binary do
@@ -178,14 +201,26 @@ defmodule Socket.SSL do
   Connect to the given address and port with the given options, raising if an
   error occurs.
   """
-  @spec connect!(Socket.Address.t(), :inet.port_number(), Keyword.t()) :: t | no_return
-  defbang(connect(address, port, options))
+  @spec connect!(Socket.Address.t(), :inet.port_number(), Keyword.t()) ::
+          sslsocket | {sslsocket, :ssl.protocol_extensions()}
+  def connect!(address, port, options) do
+    case connect(address, port, options) do
+      {:ok, socket} ->
+        socket
+
+      {:ok, socket, extensions} ->
+        {socket, extensions}
+
+      {:error, reason} ->
+        raise Socket.Error, reason: reason
+    end
+  end
 
   @doc """
   Create an SSL socket listening on an OS chosen port, use `local` to know the
   port it was bound on.
   """
-  @spec listen :: {:ok, t} | {:error, term}
+  @spec listen :: {:ok, sslsocket} | {:error, term}
   def listen do
     listen(0, [])
   end
@@ -194,18 +229,19 @@ defmodule Socket.SSL do
   Create an SSL socket listening on an OS chosen port, use `local` to know the
   port it was bound on, raising in case of error.
   """
-  @spec listen! :: t | no_return
+  @spec listen! :: sslsocket
   defbang(listen)
 
   @doc """
   Create an SSL socket listening on an OS chosen port using the given options or
   listening on the given port.
   """
-  @spec listen(:inet.port_number() | Keyword.t()) :: {:ok, t} | {:error, term}
+  @spec listen(:inet.port_number()) :: {:ok, sslsocket} | {:error, term}
   def listen(port) when port |> is_integer do
     listen(port, [])
   end
 
+  @spec listen(Keyword.t()) :: {:ok, sslsocket} | {:error, term}
   def listen(options) do
     listen(0, options)
   end
@@ -214,13 +250,13 @@ defmodule Socket.SSL do
   Create an SSL socket listening on an OS chosen port using the given options
   or listening on the given port, raising in case of error.
   """
-  @spec listen!(:inet.port_number() | Keyword.t()) :: t | no_return
+  @spec listen!(:inet.port_number() | Keyword.t()) :: sslsocket
   defbang(listen(port_or_options))
 
   @doc """
   Create an SSL socket listening on the given port and using the given options.
   """
-  @spec listen(:inet.port_number(), Keyword.t()) :: {:ok, t} | {:error, term}
+  @spec listen(:inet.port_number(), Keyword.t()) :: {:ok, sslsocket} | {:error, term}
   def listen(port, options) do
     options = Keyword.put(options, :mode, :passive)
     options = Keyword.put_new(options, :reuse, true)
@@ -232,14 +268,14 @@ defmodule Socket.SSL do
   Create an SSL socket listening on the given port and using the given options,
   raising in case of error.
   """
-  @spec listen!(:inet.port_number(), Keyword.t()) :: t | no_return
+  @spec listen!(:inet.port_number(), Keyword.t()) :: sslsocket
   defbang(listen(port, options))
 
   @doc """
   Accept a connection from a listening SSL socket or start an SSL connection on
   the given client socket.
   """
-  @spec accept(Socket.t() | t) :: {:ok, t} | {:error, term}
+  @spec accept(Socket.t() | t) :: {:ok, sslsocket} | {:error, term}
   def accept(self) do
     accept(self, [])
   end
@@ -248,14 +284,14 @@ defmodule Socket.SSL do
   Accept a connection from a listening SSL socket or start an SSL connection on
   the given client socket, raising if an error occurs.
   """
-  @spec accept!(Socket.t() | t) :: t | no_return
+  @spec accept!(Socket.t() | t) :: sslsocket
   defbang(accept(socket))
 
   @doc """
   Accept a connection from a listening SSL socket with the given options or
   start an SSL connection on the given client socket with the given options.
   """
-  @spec accept(Socket.t(), Keyword.t()) :: {:ok, t} | {:error, term}
+  @spec accept(Socket.t(), Keyword.t()) :: {:ok, sslsocket} | {:error, term}
   def accept(socket, options) when socket |> Record.is_record(:sslsocket) do
     timeout = options[:timeout] || :infinity
 
@@ -282,15 +318,25 @@ defmodule Socket.SSL do
   start an SSL connection on the given client socket with the given options,
   raising if an error occurs.
   """
-  @spec accept!(Socket.t(), t | Keyword.t()) :: t | no_return
-  defbang(accept(socket, options))
+  @spec accept!(Socket.t(), Keyword.t()) :: sslsocket
+  def accept!(socket, options) do
+    case accept(socket, options) do
+      {:ok, socket} ->
+        socket
+
+      {:error, reason} ->
+        raise Socket.Error, reason: reason
+    end
+  end
 
   @doc """
   Execute the handshake; useful if you want to delay the handshake to make it
   in another process.
   """
-  @spec handshake(t) :: :ok | {:error, term}
-  @spec handshake(t, Keyword.t()) :: :ok | {:error, term}
+  @spec handshake(sslsocket) ::
+          {:ok, sslsocket} | {:ok, sslsocket, :ssl.protocol_extensions()} | {:error, term}
+  @spec handshake(sslsocket, Keyword.t()) ::
+          {:ok, sslsocket} | {:ok, sslsocket, :ssl.protocol_extensions()} | {:error, term}
   def handshake(socket, options \\ []) when socket |> Record.is_record(:sslsocket) do
     timeout = options[:timeout] || :infinity
 
@@ -301,15 +347,25 @@ defmodule Socket.SSL do
   Execute the handshake, raising if an error occurs; useful if you want to
   delay the handshake to make it in another process.
   """
-  @spec handshake!(t) :: :ok | no_return
-  @spec handshake!(t, Keyword.t()) :: :ok | no_return
-  defbang(handshake(socket))
-  defbang(handshake(socket, options))
+  @spec handshake!(sslsocket) :: sslsocket | {sslsocket, :ssl.protocol_extensions()}
+  @spec handshake!(sslsocket, Keyword.t()) :: sslsocket | {sslsocket, :ssl.protocol_extensions()}
+  def handshake!(socket, options \\ []) do
+    case handshake(socket, options) do
+      {:ok, socket} ->
+        socket
+
+      {:ok, socket, extensions} ->
+        {socket, extensions}
+
+      {:error, reason} ->
+        raise Socket.Error, reason: reason
+    end
+  end
 
   @doc """
   Set the process which will receive the messages.
   """
-  @spec process(t | port, pid) :: :ok | {:error, :closed | :not_owner | Error.t()}
+  @spec process(sslsocket | port, pid) :: :ok | {:error, :closed | :not_owner | term}
   def process(socket, pid) when socket |> Record.is_record(:sslsocket) do
     :ssl.controlling_process(socket, pid)
   end
@@ -317,19 +373,19 @@ defmodule Socket.SSL do
   @doc """
   Set the process which will receive the messages, raising if an error occurs.
   """
-  @spec process!(t | port, pid) :: :ok | no_return
+  @spec process!(sslsocket | port, pid) :: :ok
   def process!(socket, pid) do
     case process(socket, pid) do
       :ok ->
         :ok
 
-      :closed ->
+      {:error, :closed} ->
         raise RuntimeError, message: "the socket is closed"
 
-      :not_owner ->
+      {:error, :not_owner} ->
         raise RuntimeError, message: "the current process isn't the owner"
 
-      code ->
+      {:error, code} ->
         raise Socket.Error, reason: code
     end
   end
@@ -337,7 +393,7 @@ defmodule Socket.SSL do
   @doc """
   Set options of the socket.
   """
-  @spec options(t | :ssl.sslsocket(), Keyword.t()) :: :ok | {:error, Socket.Error.t()}
+  @spec options(sslsocket, Keyword.t()) :: :ok | {:error, :ssl.reason()}
   def options(socket, options) when socket |> Record.is_record(:sslsocket) do
     :ssl.setopts(socket, arguments(options))
   end
@@ -345,7 +401,7 @@ defmodule Socket.SSL do
   @doc """
   Set options of the socket, raising if an error occurs.
   """
-  @spec options!(t | Socket.SSL.t() | port, Keyword.t()) :: :ok | no_return
+  @spec options!(sslsocket, Keyword.t()) :: :ok
   defbang(options(socket, options))
 
   @doc """
@@ -508,7 +564,7 @@ defmodule Socket.SSL do
   @doc """
   Get information about the SSL connection.
   """
-  @spec info(t) :: {:ok, list} | {:error, term}
+  @spec info(sslsocket) :: {:ok, :ssl.connection_info()} | {:error, :ssl.reason()}
   def info(socket) when socket |> Record.is_record(:sslsocket) do
     :ssl.connection_information(socket)
   end
@@ -516,13 +572,13 @@ defmodule Socket.SSL do
   @doc """
   Get information about the SSL connection, raising if an error occurs.
   """
-  @spec info!(t) :: list | no_return
+  @spec info!(sslsocket) :: :ssl.connection_info()
   defbang(info(socket))
 
   @doc """
   Get the certificate of the peer.
   """
-  @spec certificate(t) :: {:ok, String.t()} | {:error, term}
+  @spec certificate(sslsocket) :: {:ok, :public_key.der_encoded()} | {:error, :ssl.reason()}
   def certificate(socket) when socket |> Record.is_record(:sslsocket) do
     :ssl.peercert(socket)
   end
@@ -530,27 +586,27 @@ defmodule Socket.SSL do
   @doc """
   Get the certificate of the peer, raising if an error occurs.
   """
-  @spec certificate!(t) :: String.t() | no_return
+  @spec certificate!(sslsocket) :: :public_key.der_encoded()
   defbang(certificate(socket))
 
   @doc """
   Get the negotiated protocol.
   """
-  @spec negotiated_protocol(t) :: String.t() | nil
+  @spec negotiated_protocol(sslsocket) :: binary()
   def negotiated_protocol(socket) when socket |> Record.is_record(:sslsocket) do
     case :ssl.negotiated_protocol(socket) do
       {:ok, protocol} ->
         protocol
 
-      {:error, :protocol_not_negotiated} ->
-        nil
+      {:error, reason} ->
+        raise Socket.Error, reason: reason
     end
   end
 
   @doc """
   Renegotiate the secure connection.
   """
-  @spec renegotiate(t) :: :ok | {:error, term}
+  @spec renegotiate(sslsocket) :: :ok | {:error, :ssl.reason()}
   def renegotiate(socket) when socket |> Record.is_record(:sslsocket) do
     :ssl.renegotiate(socket)
   end
@@ -558,7 +614,7 @@ defmodule Socket.SSL do
   @doc """
   Renegotiate the secure connection, raising if an error occurs.
   """
-  @spec renegotiate!(t) :: :ok | no_return
+  @spec renegotiate!(sslsocket) :: :ok
   defbang(renegotiate(socket))
 
   defp wildcard_fix do
