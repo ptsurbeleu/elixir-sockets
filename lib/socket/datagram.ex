@@ -35,6 +35,9 @@ defprotocol Socket.Datagram.Protocol do
 end
 
 defmodule Socket.Datagram do
+  @moduledoc """
+  Sends and receives individual packets on connectionless sockets (e.g. UDP).
+  """
   @type t :: Socket.Datagram.Protocol.t()
 
   use Socket.Helpers
