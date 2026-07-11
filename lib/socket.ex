@@ -7,6 +7,15 @@
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
 defmodule Socket do
+  @moduledoc """
+  The top-level entry point for opening network connections.
+
+  Instead of picking a specific socket type upfront, you can pass a URI like
+  `"tcp://example.com:80"` or `"wss://example.com/chat"` and this module
+  figures out the right type for you. Supports TCP (tcp://), SSL (ssl://), UDP (udp://), WebSocket (ws://),
+  and secure WebSocket (wss://) — for both outbound connections (`connect`)
+  and inbound listeners (`listen`).
+  """
   @type t :: Socket.Protocol.t()
 
   @default_port_ws 80
