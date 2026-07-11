@@ -40,7 +40,7 @@ defmodule Socket.UDP do
   Create a UDP socket listening on an OS chosen port, use `local` to know the
   port it was bound on.
   """
-  @spec open :: {:ok, t} | {:error, Error.t()}
+  @spec open :: {:ok, t} | {:error, :inet.posix()}
   def open do
     open(0, [])
   end
@@ -49,13 +49,13 @@ defmodule Socket.UDP do
   Create a UDP socket listening on an OS chosen port, use `local` to know the
   port it was bound on, raising if an error occurs.
   """
-  @spec open! :: t | no_return
+  @spec open! :: t
   defbang(open)
 
   @doc """
   Create a UDP socket listening on the given port or using the given options.
   """
-  @spec open(:inet.port_number() | Keyword.t()) :: {:ok, t} | {:error, Error.t()}
+  @spec open(:inet.port_number() | Keyword.t()) :: {:ok, t} | {:error, :inet.posix()}
   def open(port) when port |> is_integer do
     open(port, [])
   end
@@ -68,13 +68,13 @@ defmodule Socket.UDP do
   Create a UDP socket listening on the given port or using the given options,
   raising if an error occurs.
   """
-  @spec open!(:inet.port_number() | Keyword.t()) :: t | no_return
+  @spec open!(:inet.port_number() | Keyword.t()) :: t
   defbang(open(port_or_options))
 
   @doc """
   Create a UDP socket listening on the given port and using the given options.
   """
-  @spec open(:inet.port_number(), Keyword.t()) :: {:ok, t} | {:error, Error.t()}
+  @spec open(:inet.port_number(), Keyword.t()) :: {:ok, t} | {:error, :inet.posix()}
   def open(port, options) do
     options = Keyword.put_new(options, :mode, :passive)
 
@@ -85,13 +85,13 @@ defmodule Socket.UDP do
   Create a UDP socket listening on the given port and using the given options,
   raising if an error occurs.
   """
-  @spec open!(:inet.port_number(), Keyword.t()) :: t | no_return
+  @spec open!(:inet.port_number(), Keyword.t()) :: t
   defbang(open(port, options))
 
   @doc """
   Set the process which will receive the messages.
   """
-  @spec process(t | port, pid) :: :ok | {:error, :closed | :not_owner | Error.t()}
+  @spec process(t | port, pid) :: :ok | {:error, :closed | :not_owner | :badarg | :inet.posix()}
   def process(socket, pid) when socket |> is_port do
     :gen_udp.controlling_process(socket, pid)
   end
@@ -105,21 +105,24 @@ defmodule Socket.UDP do
       :ok ->
         :ok
 
-      :closed ->
+      {:error, :closed} ->
         raise RuntimeError, message: "the socket is closed"
 
-      :not_owner ->
+      {:error, :not_owner} ->
         raise RuntimeError, message: "the current process isn't the owner"
 
-      code ->
-        raise Socket.Error, reason: code
+      {:error, :badarg} ->
+        raise RuntimeError, message: "not an identifier of an open port, or the registered name of an open port"
+
+      {:error, reason} ->
+        raise Socket.Error, reason: reason
     end
   end
 
   @doc """
   Set options of the socket.
   """
-  @spec options(t, Keyword.t()) :: :ok | {:error, Error.t()}
+  @spec options(t, Keyword.t()) :: :ok | {:error, :inet.posix()}
   def options(socket, opts) when socket |> is_port do
     :inet.setopts(socket, arguments(opts))
   end
