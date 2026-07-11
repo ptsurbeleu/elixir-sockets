@@ -7,6 +7,14 @@
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
 defmodule Socket.SOCKS do
+  @moduledoc """
+  Lets you connect to a remote host through a SOCKS proxy.
+
+  Instead of connecting directly, you route your connection through a SOCKS
+  server that forwards traffic on your behalf — useful when direct access is
+  blocked or you need to tunnel through a firewall. Though only SOCKS4 is
+  implemented at this time.
+  """
   use Socket.Helpers
 
   def connect(to, through, options \\ []) do
