@@ -1,26 +1,53 @@
 name: "Test"
-on: ["push", "pull_request"]
+on: ["push"]
+
+env:
+  MIX_ENV: test
+  ELIXIR_VERSION: "1.20.1"
+  OTP_VERSION: "28"
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
-    name: OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
-    strategy:
-      matrix:
-        otp: ["24.x"]
-        elixir: ["1.12.3", "1.13.3", "1.14.3", "1.15.3"]
+    runs-on: ubuntu-latest
+    name: OTP ${{ env.OTP_VERSION }} / Elixir ${{ env.ELIXIR_VERSION }}
+
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: erlef/setup-elixir@v1
-        name: Setup elixir
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
         with:
-          otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
 
-      - run: |
-          mix deps.get
-          mix compile --warnings-as-errors
-          mix format --check-formatted
-          # mix credo
-          mix test
+      - name: Check formatting
+        run: make check-formatted
+
+      - name: Run Credo
+        run: make lint
+
+      - name: Compile (warnings as errors)
+        run: make compile
+
+      - name: Run tests
+        run: make test
+
+      - name: Restore PLT cache (Dialyzer)
+        uses: actions/cache@v4
+        id: plt-cache
+        with:
+          path: _build/dev
+          key: ${{ runner.os }}-plt-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-plt-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-
+
+      - name: Build PLTs (Dialyzer)
+        if: steps.plt-cache.outputs.cache-hit != 'true'
+        run: make build-plt
+
+      - name: Run Dialyzer
+        run: make dialyzer
+
+      - name: Build docs
+        run: make docs
