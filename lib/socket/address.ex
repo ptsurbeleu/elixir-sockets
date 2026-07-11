@@ -95,6 +95,7 @@ defmodule Socket.Address do
     ip_in_subnet?(net, netsize, addr)
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp maskv4(addrpart, netsize) when addrpart |> is_integer and netsize |> is_integer do
     cond do
       netsize >= 8 ->
@@ -116,6 +117,7 @@ defmodule Socket.Address do
     end
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp maskv6(addrpart, netsize) when is_integer(addrpart) and is_integer(netsize) do
     cond do
       netsize >= 16 ->

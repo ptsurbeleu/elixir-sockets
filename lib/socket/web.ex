@@ -247,8 +247,8 @@ defmodule Socket.Web do
   You can also pass TCP or SSL options, depending if you're using secure
   websockets or not.
   """
-
   @spec connect!(Socket.Address.t(), :inet.port_number(), Keyword.t()) :: t | no_return
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def connect!(address, port, options) do
     {local, global} = arguments(options)
 
@@ -643,6 +643,7 @@ defmodule Socket.Web do
   end
 
   @spec recv(t, boolean, non_neg_integer, Keyword.t()) :: {:ok, binary} | {:error, error}
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp recv(%W{socket: socket, version: 13}, mask, length, options) do
     length =
       cond do
@@ -677,6 +678,7 @@ defmodule Socket.Web do
           case socket |> Socket.Stream.recv(4, options) do
             {:ok, <<key::32>>} ->
               if length > 0 do
+                # credo:disable-for-next-line Credo.Check.Refactor.Nesting
                 case socket |> Socket.Stream.recv(length, options) do
                   {:ok, data} ->
                     {:ok, unmask(key, data)}
@@ -725,6 +727,7 @@ defmodule Socket.Web do
   @spec recv(t, Keyword.t()) :: {:ok, packet} | {:error, error}
   def recv(self, options \\ [])
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def recv(%W{socket: socket, version: 13} = self, options) do
     case socket |> Socket.Stream.recv(2, options) do
       # a non fragmented message packet
@@ -765,6 +768,7 @@ defmodule Socket.Web do
             {:pong, data}
 
           :close ->
+            # credo:disable-for-next-line Credo.Check.Refactor.Nesting
             case data do
               <<>> ->
                 :close
