@@ -106,13 +106,14 @@ defmodule Socket.Web do
 
   @type t :: %Socket.Web{
           socket: term,
-          version: 13,
-          path: String.t(),
-          origin: String.t(),
-          protocols: [String.t()],
-          extensions: [String.t()],
-          key: String.t(),
-          mask: boolean
+          version: 13 | nil,
+          path: String.t() | nil,
+          origin: String.t() | nil,
+          protocols: [String.t()] | nil,
+          extensions: [String.t()] | nil,
+          key: String.t() | nil,
+          mask: boolean | nil,
+          headers: %{String.t() => String.t()}
         }
 
   @spec headers(%{String.t() => String.t()}, Socket.t(), Keyword.t()) :: %{
@@ -413,7 +414,7 @@ defmodule Socket.Web do
   You can also pass TCP or SSL options, depending if you're using secure
   websockets or not.
   """
-  @spec listen!(:inet.port_number(), Keyword.t()) :: t | no_return
+  @spec listen!(:inet.port_number(), Keyword.t()) :: t
   def listen!(port, options) do
     {local, global} = arguments(options)
 
@@ -793,21 +794,17 @@ defmodule Socket.Web do
   @doc """
   Receive a packet from the websocket, raising if an error occurs.
   """
-  @spec recv!(t, Keyword.t()) :: packet | no_return
+  @spec recv!(t, Keyword.t()) :: packet
   def recv!(self, options \\ []) do
     case recv(self, options) do
       {:ok, packet} ->
         packet
-
-      {:error, :protocol_error} ->
-        raise RuntimeError, message: "protocol error"
 
       {:error, code} ->
         raise Socket.Error, reason: code
     end
   end
 
-  @spec length(binary) :: binary
   defp length(data) when byte_size(data) <= 125 do
     <<byte_size(data)::7>>
   end
@@ -876,8 +873,8 @@ defmodule Socket.Web do
   @doc """
   Send a packet to the websocket, raising if an error occurs.
   """
-  @spec send!(t, packet) :: :ok | no_return
-  @spec send!(t, packet, Keyword.t()) :: :ok | no_return
+  @spec send!(t, packet) :: :ok
+  @spec send!(t, packet, Keyword.t()) :: :ok
   def send!(self, packet, options \\ []) do
     case send(self, packet, options) do
       :ok ->
@@ -906,8 +903,8 @@ defmodule Socket.Web do
   @doc """
   Send a ping request with the optional cookie, raising if an error occurs.
   """
-  @spec ping!(t) :: :ok | no_return
-  @spec ping!(t, binary) :: :ok | no_return
+  @spec ping!(t) :: binary()
+  @spec ping!(t, binary) :: binary()
   def ping!(self, cookie \\ :crypto.strong_rand_bytes(32)) do
     send!(self, {:ping, cookie})
 
@@ -926,7 +923,7 @@ defmodule Socket.Web do
   Send a pong with the given (and received) ping cookie, raising if an error
   occurs.
   """
-  @spec pong!(t, binary) :: :ok | no_return
+  @spec pong!(t, binary) :: :ok
   def pong!(self, cookie) do
     send!(self, {:pong, cookie})
   end
@@ -978,7 +975,7 @@ defmodule Socket.Web do
     {:ok, reason, data}
   end
 
-  defp do_close(self, {:ok, {:error, _}}, _, _) do
+  defp do_close(self, {:error, _}, _, _) do
     abort(self)
   end
 
