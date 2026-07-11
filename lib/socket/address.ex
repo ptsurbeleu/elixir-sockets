@@ -7,6 +7,14 @@
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
 defmodule Socket.Address do
+  @moduledoc """
+  Utilities for working with IP addresses and hostnames.
+
+  Handles parsing IP strings into tuples, converting them back to strings,
+  resolving a hostname to its list of IP addresses, and checking whether
+  a given IP address falls within a particular subnet. Works with both
+  IPv4 and IPv6.
+  """
   @type t :: String.t() | charlist | :inet.ip_address()
   @type ipaddr :: :inet.ip_address()
 
