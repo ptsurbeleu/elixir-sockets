@@ -186,21 +186,19 @@ defmodule Socket.Web do
   @spec connect(Socket.Address.t(), :inet.port_number(), Keyword.t()) ::
           {:ok, t} | {:error, error}
   def connect(address, port, options) do
-    try do
-      {:ok, connect!(address, port, options)}
-    rescue
-      e in [MatchError] ->
-        case e.term do
-          {:http_response, _, http_code, http_message} -> {:error, {http_code, http_message}}
-          _ -> {:error, "malformed handshake"}
-        end
+    {:ok, connect!(address, port, options)}
+  rescue
+    e in [MatchError] ->
+      case e.term do
+        {:http_response, _, http_code, http_message} -> {:error, {http_code, http_message}}
+        _ -> {:error, "malformed handshake"}
+      end
 
-      e in [RuntimeError] ->
-        {:error, e.message}
+    e in [RuntimeError] ->
+      {:error, e.message}
 
-      e in [Socket.Error] ->
-        {:error, e.message}
-    end
+    e in [Socket.Error] ->
+      {:error, e.message}
   end
 
   @doc """
@@ -249,6 +247,7 @@ defmodule Socket.Web do
   You can also pass TCP or SSL options, depending if you're using secure
   websockets or not.
   """
+
   @spec connect!(Socket.Address.t(), :inet.port_number(), Keyword.t()) :: t | no_return
   def connect!(address, port, options) do
     {local, global} = arguments(options)
@@ -438,18 +437,16 @@ defmodule Socket.Web do
   """
   @spec accept(t, Keyword.t()) :: {:ok, t} | {:error, error}
   def accept(self, options \\ []) do
-    try do
-      {:ok, accept!(self, options)}
-    rescue
-      MatchError ->
-        {:error, "malformed handshake"}
+    {:ok, accept!(self, options)}
+  rescue
+    MatchError ->
+      {:error, "malformed handshake"}
 
-      e in [RuntimeError] ->
-        {:error, e.message}
+    e in [RuntimeError] ->
+      {:error, e.message}
 
-      e in [Socket.Error] ->
-        {:error, e.message}
-    end
+    e in [Socket.Error] ->
+      {:error, e.message}
   end
 
   @doc """

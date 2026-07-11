@@ -390,7 +390,7 @@ defmodule Socket.TCP do
     linux_tcp_option(tcp_fastopen_linux, queue_length)
   end
 
-  defp tcp_fast_open_connect() do
+  defp tcp_fast_open_connect do
     with {:ok, flags} <- File.read("/proc/sys/net/ipv4/tcp_fastopen"),
          {flags, _rest} <- Integer.parse(flags) do
       if Bitwise.band(flags, 1) == 0 do

@@ -364,13 +364,11 @@ defimpl Socket.Stream.Protocol, for: Socket.Port do
   end
 
   def close(self) do
-    try do
-      _ = Port.close(self.port)
-      :ok
-    rescue
-      e ->
-        Logger.error(Exception.format(:error, e, __STACKTRACE__))
-        {:error, Exception.message(e)}
-    end
+    Port.close(self.port)
+    :ok
+  rescue
+    e ->
+      Logger.error(Exception.format(:error, e, __STACKTRACE__))
+      {:error, Exception.message(e)}
   end
 end
