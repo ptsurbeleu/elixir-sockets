@@ -20,7 +20,7 @@ defmodule Socket.MixProject do
   defp deps do
     [
       {:ex_doc, "~> 0.30", only: [:dev, :docs], runtime: false},
-      {:credo, "~> 1.7", only: [:dev]},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, github: "jeremyjh/dialyxir", only: [:dev, :test], runtime: false},
       {:version_tasks, "~> 0.12.0", only: [:dev], runtime: false}
     ]
