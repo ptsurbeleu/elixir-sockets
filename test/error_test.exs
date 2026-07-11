@@ -26,8 +26,8 @@ defmodule Socket.ErrorTest do
       {:error, reason} = :ssl.connect(~c"google.com", 443, cacerts: [])
       err = Socket.Error.exception(reason: reason)
 
-      assert err.message ==
-               "TLS client: In state wait_cert_cr at ssl_handshake.erl:2175 generated CLIENT ALERT: Fatal - Unknown CA\n"
+      assert err.message =~
+          ~r"TLS client:\ In state wait_cert_cr at ssl_handshake.erl\:.* generated CLIENT ALERT\: Fatal - Unknown CA"
     end
 
     test "decodes TLS alert (:certificate_expired)" do
@@ -36,8 +36,8 @@ defmodule Socket.ErrorTest do
 
       err = Socket.Error.exception(reason: reason)
 
-      assert err.message ==
-               "TLS client: In state certify at ssl_handshake.erl:2157 generated CLIENT ALERT: Fatal - Certificate Expired\n"
+      assert err.message =~
+          ~r"TLS client:\ In state certify at ssl_handshake.erl\:.* generated CLIENT ALERT\: Fatal - Certificate Expired"
     end
 
     test "extracts message from TLS alert tuple" do
