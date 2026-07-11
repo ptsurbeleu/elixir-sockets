@@ -1,0 +1,57 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+env:
+  MIX_ENV: test
+  ELIXIR_VERSION: "1.20.1"
+  OTP_VERSION: "28"
+
+jobs:
+  validate:
+    name: Validate PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
+
+      - name: Check formatting
+        run: make check-formatted
+
+      - name: Run Credo
+        run: make lint
+
+      - name: Compile (warnings as errors)
+        run: make compile
+
+      - name: Run tests
+        run: make test
+
+      - name: Restore PLT cache (Dialyzer)
+        uses: actions/cache@v4
+        id: plt-cache
+        with:
+          path: _build/dev
+          key: ${{ runner.os }}-plt-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-plt-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-
+
+      - name: Build PLTs (Dialyzer)
+        if: steps.plt-cache.outputs.cache-hit != 'true'
+        run: make build-plt
+
+      - name: Run Dialyzer
+        run: make dialyzer
+
+      - name: Build docs
+        run: make docs
