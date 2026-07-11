@@ -51,7 +51,7 @@ defmodule Socket.TCP do
   use Socket.Helpers
   require Record
 
-  @opaque t :: port
+  @type t :: port
   @type error :: nil | String.t()
 
   @doc """
@@ -190,8 +190,8 @@ defmodule Socket.TCP do
   @doc """
   Accept a new client from a listening socket, optionally passing options.
   """
-  @spec accept(t | port) :: {:ok, t} | {:error, Error.t()}
-  @spec accept(t | port, Keyword.t()) :: {:ok, t} | {:error, Error.t()}
+  @spec accept(t) :: {:ok, t} | {:error, term}
+  @spec accept(t, Keyword.t()) :: {:ok, :gen_tcp.socket()} | {:error, term}
   def accept(socket, options \\ []) do
     timeout = options[:timeout] || :infinity
 
@@ -231,7 +231,7 @@ defmodule Socket.TCP do
   @doc """
   Set the process which will receive the messages.
   """
-  @spec process(t, pid) :: :ok | {:error, :closed | :not_owner | Error.t()}
+  @spec process(t, pid) :: :ok | {:error, :closed | :not_owner | :badarg | :inet.posix()}
   def process(socket, pid) do
     :gen_tcp.controlling_process(socket, pid)
   end
@@ -239,19 +239,22 @@ defmodule Socket.TCP do
   @doc """
   Set the process which will receive the messages, raising if an error occurs.
   """
-  @spec process!(t | port, pid) :: :ok | no_return
+  @spec process!(t | port, pid) :: :ok
   def process!(socket, pid) do
     case process(socket, pid) do
       :ok ->
         :ok
 
-      :closed ->
+      {:error, :closed} ->
         raise RuntimeError, message: "the socket is closed"
 
-      :not_owner ->
+      {:error, :not_owner} ->
         raise RuntimeError, message: "the current process isn't the owner"
 
-      code ->
+      {:error, :badarg} ->
+        raise RuntimeError, message: "not an identifier of an open port, or the registered name of an open port"
+
+      {:error, code} ->
         raise Socket.Error, reason: code
     end
   end
@@ -259,11 +262,12 @@ defmodule Socket.TCP do
   @doc """
   Set options of the socket.
   """
-  @spec options(t | Socket.SSL.t() | port, Keyword.t()) :: :ok | {:error, Socket.Error.t()}
+  @spec options(:ssl.sslsocket(), Keyword.t()) :: :ok | {:error, term}
   def options(socket, options) when socket |> Record.is_record(:sslsocket) do
     Socket.SSL.options(socket, options)
   end
 
+  @spec options(port, Keyword.t()) :: :ok | {:error, term}
   def options(socket, options) when socket |> is_port do
     :inet.setopts(socket, arguments(options))
   end
@@ -271,7 +275,7 @@ defmodule Socket.TCP do
   @doc """
   Set options of the socket, raising if an error occurs.
   """
-  @spec options!(t | Socket.SSL.t() | port, Keyword.t()) :: :ok | no_return
+  @spec options!(t | Socket.SSL.t() | port, Keyword.t()) :: :ok
   defbang(options(socket, options))
 
   @doc """
