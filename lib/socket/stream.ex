@@ -298,6 +298,8 @@ defimpl Socket.Stream.Protocol, for: Tuple do
 end
 
 defimpl Socket.Stream.Protocol, for: Socket.Port do
+  require Logger
+
   def send(%Socket.Port{port: port, owner: owner}, data) do
     Kernel.send(port, {owner, {:command, data}})
     :ok
@@ -355,11 +357,20 @@ defimpl Socket.Stream.Protocol, for: Socket.Port do
     end
   end
 
+  @spec shutdown(Socket.Port.t()) :: no_return()
+  @spec shutdown(Socket.Port.t(), :read | :write | :both) :: no_return()
   def shutdown(_self, _how \\ :both) do
     raise "not implemented"
   end
 
   def close(self) do
-    Port.close(self.port)
+    try do
+      _ = Port.close(self.port)
+      :ok
+    rescue
+      e ->
+        Logger.error(Exception.format(:error, e, __STACKTRACE__))
+        {:error, e.message}
+    end
   end
 end
