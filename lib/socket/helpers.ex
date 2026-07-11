@@ -1,4 +1,7 @@
 defmodule Socket.Helpers do
+  @moduledoc """
+  A collection of macros that reduce boilerplate across the socket modules.
+  """
   defmacro __using__(_opts) do
     quote do
       import Socket.Helpers
