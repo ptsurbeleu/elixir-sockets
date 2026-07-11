@@ -7,6 +7,14 @@
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
 defmodule Socket.Host do
+  @moduledoc """
+  Looks up information about a host by name or IP address.
+
+  Given a hostname like `"google.com"` or an IP address, it returns a struct
+  with the canonical name, any known aliases, and the list of IP addresses
+  associated with that host. Also exposes helpers for getting the local
+  machine's hostname and network interfaces.
+  """
   defstruct [:name, :aliases, :type, :length, :list]
 
   @type t :: %Socket.Host{
