@@ -370,7 +370,7 @@ defimpl Socket.Stream.Protocol, for: Socket.Port do
     rescue
       e ->
         Logger.error(Exception.format(:error, e, __STACKTRACE__))
-        {:error, e.message}
+        {:error, Exception.message(e)}
     end
   end
 end
