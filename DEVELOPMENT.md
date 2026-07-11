@@ -1,5 +1,42 @@
 This is a placeholder for any development-process-related information: helpful links, personal observations, hints, tricks, and findings. Feel free to add anything here that you believe is useful for developing and maintaining the project.
 
+### Environment Setup
+
+This project uses [asdf](https://asdf-vm.com) to manage Elixir and Erlang versions. The required versions are pinned in `.tool-versions` at the project root, so asdf will automatically select the right ones once installed.
+
+**1. Install asdf**
+
+Follow the [official installation guide](https://asdf-vm.com/guide/getting-started.html) for your platform, then add the Erlang and Elixir plugins:
+
+```bash
+asdf plugin add erlang
+asdf plugin add elixir
+```
+
+**2. Install the pinned versions**
+
+From the project root, run:
+
+```bash
+asdf install
+```
+
+asdf reads `.tool-versions` and installs exactly the versions the project expects. This may take a few minutes the first time, as Erlang is compiled from source.
+
+**3. Verify**
+
+```bash
+elixir --version
+```
+
+You should see Elixir 1.20.1 compiled with OTP 28. If the versions don't match, make sure asdf is initialised in your shell profile (see the asdf getting-started guide).
+
+**4. Install project dependencies**
+
+```bash
+make restore
+```
+
 ### Makefile
 To streamline development, testing, formatting, publishing, and other tasks, this repository uses a Makefile to keep all **"tribal knowledge"** commands relevant to the project in a single file. It might look like yet another tool dependency to learn, but to be fair, all commands currently in use are very easy to comprehend if you take a minute or two to read through the Makefile.
 
