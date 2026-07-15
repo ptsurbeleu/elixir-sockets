@@ -15,8 +15,10 @@ defmodule Socket.Address do
   a given IP address falls within a particular subnet. Works with both
   IPv4 and IPv6.
   """
-  @type t :: String.t() | charlist | :inet.ip_address()
   @type ipaddr :: :inet.ip_address()
+  @type t :: String.t() | charlist | ipaddr
+
+  use Socket.Helpers
 
   @doc """
   Parse a string to an ip address tuple.
@@ -68,16 +70,23 @@ defmodule Socket.Address do
   Get the addresses for the given host.
   """
   @spec for(t, :inet.address_family()) :: {:ok, [t]} | {:error, :inet.posix()}
-  def for(host, family) do
-    :inet.getaddrs(parse(host), family)
-  end
+  def for(host, family) when host |> is_binary,
+    do: __MODULE__.for(to_charlist(host), family)
+
+  @spec for(t, :inet.address_family()) :: {:ok, [t]} | {:error, :inet.posix()}
+  def for(host, family) when is_ip_address(host),
+    do: :inet.getaddrs(host, family)
+
+  @spec for(t, :inet.address_family()) :: {:ok, [t]} | {:error, :inet.posix()}
+  def for(host, family) when host |> is_list,
+    do: :inet.getaddrs(host, family)
 
   @doc """
   Get the addresses for the given host, raising if an error occurs.
   """
-  @spec for!(t, :inet.address_family()) :: [t] | no_return
+  @spec for!(t, :inet.address_family()) :: [t]
   def for!(host, family) do
-    case :inet.getaddrs(parse(host), family) do
+    case __MODULE__.for(host, family) do
       {:ok, addresses} ->
         addresses
 
@@ -87,11 +96,11 @@ defmodule Socket.Address do
   end
 
   @doc """
-  Check if an IP address belong to a network
+  Check if an IPv4/IPv6 address belongs to a network
   """
   @spec is_in_subnet?(ipaddr, ipaddr, 1..128) :: boolean
   def is_in_subnet?(addr, net, netsize)
-      when netsize |> is_integer and netsize >= 1 and netsize <= 128 do
+      when netsize |> is_integer and netsize in 1..128 do
     ip_in_subnet?(net, netsize, addr)
   end
 
