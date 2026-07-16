@@ -41,10 +41,14 @@ docs : restore
 	@MIX_ENV=docs mix docs
 
 clean:
-	@printf "\033[36m~> mix docs\033[0m\n"
+	@printf "\033[36m~> mix deps.clean --unlock --unused\033[0m\n"
 	@mix deps.clean --unlock --unused
+
+publish : validate
+	@printf "\033[36m~> mix hex.publish --yes\033[0m\n"
+	@MIX_ENV=docs mix hex.publish --yes
 
 # WARNING: Keep this task in sync with pr_validation.yml for parity
 validate : check-formatted clean lint compile test build-plt dialyzer docs
 
-.PHONY : compile test format lint validate restore docs build-plt dialyzer clean
+.PHONY : compile test format lint validate restore docs build-plt dialyzer clean publish
