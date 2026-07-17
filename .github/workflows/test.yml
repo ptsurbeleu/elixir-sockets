@@ -23,7 +23,12 @@ jobs:
     needs: check_pr
     if: needs.check_pr.outputs.is_pr == 'false'
     runs-on: ubuntu-latest
-    name: OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
+    # GitHub does not evaluate matrix expressions in job names for skipped jobs, so the raw
+    # template string would show instead. `needs.*` outputs are available even when a job is
+    # skipped (the dependency has already run), so we use the &&/|| short-circuit pattern
+    # (GitHub Actions' ternary equivalent) to pick a static label when skipped and the
+    # matrix-interpolated name when actually running.
+    name: ${{ needs.check_pr.outputs.is_pr == 'true' && 'Skipped (PR open)' || format('OTP {0} / Elixir {1}', matrix.otp, matrix.elixir) }}
     strategy:
       matrix:
         otp: ["28.x"]
