@@ -5,13 +5,20 @@ env:
   MIX_ENV: test
 
 jobs:
-  check_pr:
+  test:
     runs-on: ubuntu-latest
-    outputs:
-      is_pr: ${{ steps.check.outputs.is_pr }}
+    name: OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
+    strategy:
+      matrix:
+        otp: ["28.x"]
+        elixir: ["1.20.1"]
+
     steps:
-      - name: Check if branch has open PR
-        id: check
+      # GitHub does not evaluate expressions in job names for skipped jobs — the raw template
+      # string renders verbatim instead. Running the job always (with remaining steps gated on
+      # this check) is the only way to get the matrix-interpolated name to render correctly.
+      - name: Check for open PR
+        id: pr_check
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -19,44 +26,35 @@ jobs:
             --jq "[.[] | select(.head.ref == \"${{ github.ref_name }}\" and .state == \"open\")] | length")
           echo "is_pr=$([ "$COUNT" -gt "0" ] && echo true || echo false)" >> $GITHUB_OUTPUT
 
-  test:
-    needs: check_pr
-    if: needs.check_pr.outputs.is_pr == 'false'
-    runs-on: ubuntu-latest
-    # GitHub does not evaluate matrix expressions in job names for skipped jobs, so the raw
-    # template string would show instead. `needs.*` outputs are available even when a job is
-    # skipped (the dependency has already run), so we use the &&/|| short-circuit pattern
-    # (GitHub Actions' ternary equivalent) to pick a static label when skipped and the
-    # matrix-interpolated name when actually running.
-    name: ${{ needs.check_pr.outputs.is_pr == 'true' && 'Skipped (PR open)' || format('OTP {0} / Elixir {1}', matrix.otp, matrix.elixir) }}
-    strategy:
-      matrix:
-        otp: ["28.x"]
-        elixir: ["1.20.1"]
-
-    steps:
       - name: Checkout code
+        if: steps.pr_check.outputs.is_pr == 'false'
         uses: actions/checkout@v4
 
       - name: Set up Elixir
+        if: steps.pr_check.outputs.is_pr == 'false'
         uses: erlef/setup-beam@v1
         with:
           elixir-version: ${{ matrix.elixir }}
           otp-version: ${{ matrix.otp }}
 
       - name: Check formatting
+        if: steps.pr_check.outputs.is_pr == 'false'
         run: make check-formatted
 
       - name: Run Credo
+        if: steps.pr_check.outputs.is_pr == 'false'
         run: make lint
 
       - name: Compile (warnings as errors)
+        if: steps.pr_check.outputs.is_pr == 'false'
         run: make compile
 
       - name: Run tests
+        if: steps.pr_check.outputs.is_pr == 'false'
         run: make test
 
       - name: Restore PLT cache (Dialyzer)
+        if: steps.pr_check.outputs.is_pr == 'false'
         uses: actions/cache@v4
         id: plt-cache
         with:
@@ -66,11 +64,13 @@ jobs:
             ${{ runner.os }}-plt-${{ matrix.otp }}-${{ matrix.elixir }}-
 
       - name: Build PLTs (Dialyzer)
-        if: steps.plt-cache.outputs.cache-hit != 'true'
+        if: steps.pr_check.outputs.is_pr == 'false' && steps.plt-cache.outputs.cache-hit != 'true'
         run: make build-plt
 
       - name: Run Dialyzer
+        if: steps.pr_check.outputs.is_pr == 'false'
         run: make dialyzer
 
       - name: Build docs
+        if: steps.pr_check.outputs.is_pr == 'false'
         run: make docs
