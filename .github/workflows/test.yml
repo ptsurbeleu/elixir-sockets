@@ -5,7 +5,23 @@ env:
   MIX_ENV: test
 
 jobs:
+  check_pr:
+    runs-on: ubuntu-latest
+    outputs:
+      is_pr: ${{ steps.check.outputs.is_pr }}
+    steps:
+      - name: Check if branch has open PR
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          COUNT=$(gh api repos/${{ github.repository }}/pulls \
+            --jq "[.[] | select(.head.ref == \"${{ github.ref_name }}\" and .state == \"open\")] | length")
+          echo "is_pr=$([ "$COUNT" -gt "0" ] && echo true || echo false)" >> $GITHUB_OUTPUT
+
   test:
+    needs: check_pr
+    if: needs.check_pr.outputs.is_pr == 'false'
     runs-on: ubuntu-latest
     name: OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
     strategy:
