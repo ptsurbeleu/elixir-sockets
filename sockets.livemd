@@ -32,7 +32,7 @@ This makes intent clear at the call site — the scheme tells you not just where
 
 <!-- livebook:{"break_markdown":true} -->
 
-Here is an example how to connect to a non-secure websocket endpoint at `ws://echo.websocket.in`:
+Here is an example how to connect to a **non-secure** websocket endpoint at `ws://echo.websocket.in`:
 
 ```elixir
 socket = Socket.connect!("ws://echo.websocket.in")
@@ -40,7 +40,7 @@ socket |> Socket.Web.send!({:text, "text"})
 socket |> Socket.Web.recv!()
 ```
 
-And this is an example how to connect to a secure websocket endpoint at `wss://echo.websocket.in`:
+And this is an example how to connect to a **secure** websocket endpoint at `wss://echo.websocket.in`:
 
 ```elixir
 socket = Socket.connect!("wss://echo.websocket.in")
