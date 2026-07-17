@@ -5,7 +5,7 @@ defmodule Socket.MixProject do
     [
       app: :sockets,
       elixir: "~> 1.12",
-      version: "2.1.6",
+      version: "2.1.7",
       deps: deps(),
       package: package(),
       description: "Socket handling library for Elixir, updated for OTP20+"
