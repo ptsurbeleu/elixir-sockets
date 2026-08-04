@@ -1,5 +1,18 @@
 defmodule Socket.AddressTest do
   use ExUnit.Case
+  use PropCheck
+
+  property "Socket.Address.parse/1 supports ipv4 string" do
+    forall {addr, input} <- ipv4() do
+      addr == Socket.Address.parse(input)
+    end
+  end
+
+  defp ipv4() do
+    let [a, b, c ,d] = octets <- vector(4, integer(0, 255)) do
+      {{a, b, c, d}, Enum.join(octets, ".")}
+    end
+  end
 
   describe "Socket.Address.parse/1" do
     test "parses ipv4 loopback address from string" do
@@ -121,7 +134,7 @@ defmodule Socket.AddressTest do
             [{0xFE80, 0, 0, 0, 0x8B8, 0x72EC, 0xDD2F, 0x1172}]
         )
 
-    test "resolves tuple to valid ipv6 addresses",
+    test "resolves tuple to a list of valid ipv6 addresses",
       do:
         assert(
           Socket.Address.for!({0xFE80, 0, 0, 0, 0x08B8, 0x72EC, 0xDD2F, 0x1172}, :inet6) ==
