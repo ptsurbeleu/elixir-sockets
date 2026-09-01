@@ -8,11 +8,7 @@ defmodule Socket.MixProject do
       version: "2.1.7",
       deps: deps(),
       package: package(),
-      description: "Socket handling library for Elixir, updated for OTP20+",
-
-      # NOTE: This is needed to keep ElixirLS alive and not crashing all the time
-      # whenever IDE attempts to render documentation for a PropCheck member/function.
-      propcheck: [counter_examples: Path.expand("./_build/propcheck.ctex")]
+      description: "Socket handling library for Elixir, updated for OTP20+"
     ]
   end
 
