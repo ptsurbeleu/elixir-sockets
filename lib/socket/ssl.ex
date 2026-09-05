@@ -45,7 +45,10 @@ defmodule Socket.SSL do
   """
 
   use Socket.Helpers
+
   require Record
+
+  alias Socket.Effects.SSL, as: SSL
 
   @type t :: Socket.SSL.t()
   @type error :: nil | String.t()
@@ -56,7 +59,7 @@ defmodule Socket.SSL do
   """
   @spec ciphers(:ssl.protocol_version()) :: :ssl.ciphers()
   def ciphers(version \\ :"tlsv1.3") do
-    :ssl.cipher_suites(:all, version)
+    SSL.cipher_suites(:all, version)
   end
 
   @doc """
@@ -64,7 +67,7 @@ defmodule Socket.SSL do
   """
   @spec versions :: [tuple]
   def versions do
-    :ssl.versions()
+    SSL.versions()
   end
 
   @doc """
@@ -77,7 +80,7 @@ defmodule Socket.SSL do
   """
   @spec error(term) :: String.t() | nil
   def error(code) do
-    case :ssl.format_error(code) do
+    case SSL.format_error(code) do
       ~c"Unexpected error:" ++ _ ->
         nil
 
@@ -164,7 +167,7 @@ defmodule Socket.SSL do
       |> Keyword.put_new_lazy(:cacerts, &:public_key.cacerts_get/0)
       |> Keyword.put_new(:verify, true)
 
-    :ssl.connect(socket, options, timeout)
+    SSL.connect(socket, options, timeout)
   end
 
   @spec connect(Socket.Address.t(), :inet.port_number()) ::
@@ -194,7 +197,7 @@ defmodule Socket.SSL do
       |> Keyword.put_new_lazy(:cacerts, &:public_key.cacerts_get/0)
       |> Keyword.put_new(:verify, true)
 
-    :ssl.connect(address, port, arguments(options), timeout)
+    SSL.connect(address, port, arguments(options), timeout)
   end
 
   @doc """
@@ -261,7 +264,7 @@ defmodule Socket.SSL do
     options = Keyword.put(options, :mode, :passive)
     options = Keyword.put_new(options, :reuse, true)
 
-    :ssl.listen(port, arguments(options))
+    SSL.listen(port, arguments(options))
   end
 
   @doc """
@@ -295,9 +298,9 @@ defmodule Socket.SSL do
   def accept(socket, options) when socket |> Record.is_record(:sslsocket) do
     timeout = options[:timeout] || :infinity
 
-    with {:ok, socket} <- socket |> :ssl.transport_accept(timeout),
+    with {:ok, socket} <- socket |> SSL.transport_accept(timeout),
          :ok <-
-           if(options[:mode] == :active, do: socket |> :ssl.setopts([{:active, true}]), else: :ok),
+           if(options[:mode] == :active, do: socket |> SSL.setopts([{:active, true}]), else: :ok),
          {:ok, socket} <- socket |> handshake(timeout: timeout) do
       {:ok, socket}
     else
@@ -340,7 +343,7 @@ defmodule Socket.SSL do
   def handshake(socket, options \\ []) when socket |> Record.is_record(:sslsocket) do
     timeout = options[:timeout] || :infinity
 
-    :ssl.handshake(socket, timeout)
+    SSL.handshake(socket, timeout)
   end
 
   @doc """

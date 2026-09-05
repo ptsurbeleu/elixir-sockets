@@ -23,7 +23,8 @@ defmodule Socket.MixProject do
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, github: "jeremyjh/dialyxir", only: [:dev, :test], runtime: false},
       {:version_tasks, "~> 0.12.0", only: [:dev], runtime: false},
-      {:propcheck, "~> 1.5", only: [:test, :dev]}
+      {:propcheck, "~> 1.5", only: [:test, :dev]},
+      {:efx, path: "../efx", runtime: true}
     ]
   end
 
