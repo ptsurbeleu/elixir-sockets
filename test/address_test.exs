@@ -9,7 +9,7 @@ defmodule Socket.AddressTest do
   end
 
   defp ipv4() do
-    let [a, b, c ,d] = octets <- vector(4, integer(0, 255)) do
+    let [a, b, c, d] = octets <- vector(4, integer(0, 255)) do
       {{a, b, c, d}, Enum.join(octets, ".")}
     end
   end
